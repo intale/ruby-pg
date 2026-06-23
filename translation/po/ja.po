@@ -1,5 +1,5 @@
 # Pgの日本語訳
-# Copyright (C) 2023 gemmaro.
+# Copyright (C) 2023, 2026 gemmaro.
 #
 # 翻訳に関しての注意点は以下です。
 #
@@ -10,11 +10,14 @@
 #
 # encoder -> エンコーダー
 # decoder -> デコーダー
+# query -> 問い合わせ[1]
+#
+# [1] https://www.postgresql.jp/document/18/html/queries-overview.html
 msgid ""
 msgstr ""
 "Project-Id-Version: Pg 1.4.5\n"
 "POT-Creation-Date: 2026-06-23 14:39+0900\n"
-"PO-Revision-Date: 2023-05-26 22:39+0900\n"
+"PO-Revision-Date: 2026-06-23 15:26+0900\n"
 "Last-Translator: gemmaro <gemmaro.dev@gmail.com>\n"
 "Language-Team: none\n"
 "Language: ja\n"
@@ -35,17 +38,13 @@ msgstr "ホーム :: https://github.com/ged/ruby-pg"
 
 #. type: Plain text
 #: ../README.md:7
-#, fuzzy, no-wrap
-#| msgid ""
-#| "* docs :: http://deveiate.org/code/pg (English) ,\n"
-#| "          https://deveiate.org/code/pg/README_ja_md.html (Japanese)\n"
-#| "* clog :: link:/CHANGELOG.md\n"
+#, no-wrap
 msgid ""
 "* docs :: http://deveiate.org/code/pg/README_md.html (English) ,\n"
 "          https://deveiate.org/code/pg/README_ja_md.html (Japanese)\n"
 "* clog :: link:/CHANGELOG.md\n"
 msgstr ""
-"* ドキュメント :: http://deveiate.org/code/pg （英語）、 https://deveiate.org/code/pg/README_ja_md.html （日本語）\n"
+"* ドキュメント :: http://deveiate.org/code/pg/README_md.html （英語）、 https://deveiate.org/code/pg/README_ja_md.html （日本語）\n"
 "* 変更履歴 :: link:/CHANGELOG.md\n"
 
 #. type: Plain text
@@ -118,7 +117,7 @@ msgstr ""
 msgid ""
 "See the PG::Connection class for query methods and the PG::Result class for "
 "information on working with the results of a query."
-msgstr ""
+msgstr "問い合わせのメソッドについては PG::Connection クラスを、問い合わせの結果を取り回す際の情報については PG::Result クラスを参照してください。"
 
 #. type: Title ##
 #: ../README.md:36
@@ -161,16 +160,12 @@ msgstr "Ruby 2.7かそれより新しいバージョン"
 #. type: Bullet: '* '
 #: ../README.md:48
 msgid "PostgreSQL 10.x or later"
-msgstr ""
+msgstr "PostgreSQL 10.x以降"
 
 #. type: Bullet: '* '
 #: ../README.md:48
-#, fuzzy
-#| msgid "PostgreSQL 10.x or later (with headers, -dev packages, etc)."
 msgid "When installing the source gem: libpq with headers, -dev packages, etc."
-msgstr ""
-"PostgreSQL 10.xかそれ以降のバージョン（ヘッダー付属のもの、例えば-devの名前の"
-"パッケージ）。"
+msgstr "ソースからgemをインストールする場合：-devのパッケージなど、ヘッダ付きのlibpq"
 
 #. type: Title ##
 #: ../README.md:50
@@ -193,13 +188,13 @@ msgstr "    gem install pg\n"
 #: ../README.md:57
 msgid ""
 "This installs the binary gem, specific to the running platform by default."
-msgstr ""
+msgstr "こうするとバイナリgem、とりわけ実行しているプラットフォームに固有のものが既定でインストールされます。"
 
 #. type: Title ###
 #: ../README.md:58
 #, no-wrap
 msgid "Binary gem"
-msgstr ""
+msgstr "バイナリgem"
 
 #. type: Plain text
 #: ../README.md:62
@@ -207,6 +202,8 @@ msgid ""
 "The binary gems don't depend on the libpq package on the running system.  "
 "They have libpq builtin."
 msgstr ""
+"バイナリgemは実行中のシステムのlibpqパッケージに依存しません。\n"
+"組込みでlibpqを持ちます。"
 
 #. type: Plain text
 #: ../README.md:64
@@ -214,7 +211,7 @@ msgid ""
 "The gems for platform `x86_64-linux` and `aarch64-linux` run on Alpine "
 "Linux, but require the package `gcompat`, while the native gems for platform "
 "`*-linux-musl` work without that dependency."
-msgstr ""
+msgstr "`x86_64-linux`と`aarch64-linux`のプラットフォームのgemはAlpine Linuxで走りますが、`gcompat`パッケージが要求されます。一方、`*-linux-musl`のプラットフォームのネイティブgemはその依存関係なしに動作します。"
 
 #. type: Plain text
 #: ../README.md:66
@@ -225,17 +222,21 @@ msgid ""
 "of dependencies. It doesn't seem to be a widely used feature and that it's "
 "worth to support it. If it's necessary, the source gem can be forced."
 msgstr ""
+"バイナリgemが対応していない用途が1つあり、それが[LDAPからの接続オプション](https://www.postgresql.org/docs/current/libpq-ldap.html)の取得です。\n"
+"これに対応するには`libldap`が必要でしょうが、沢山の依存関係があります。\n"
+"広く使われている機能のようにも対応する価値があるとも思われません。\n"
+"必要であれば、ソースgemに強制できます。"
 
 #. type: Title ###
 #: ../README.md:67
 #, no-wrap
 msgid "Source gem"
-msgstr ""
+msgstr "ソースgem"
 
 #. type: Plain text
 #: ../README.md:70
 msgid "The source gem can be forced by:"
-msgstr ""
+msgstr "ソースgemは次のように強制できます。"
 
 #. type: Plain text
 #: ../README.md:73
@@ -244,6 +245,8 @@ msgid ""
 "    gem uninstall pg --all\n"
 "    gem install pg --platform ruby\n"
 msgstr ""
+"    gem uninstall pg --all\n"
+"    gem install pg --platform ruby\n"
 
 #. type: Plain text
 #: ../README.md:76
@@ -278,14 +281,14 @@ msgstr "    bundle config build.pg --with-pg-config=<path to pg_config>\n"
 #: ../README.md:83
 #, no-wrap
 msgid "Bundler"
-msgstr ""
+msgstr "Bundler"
 
 #. type: Plain text
 #: ../README.md:86
 msgid ""
 "To make sure, the necessary platforms and the source gem are fetched by "
 "bundler, they can be added like so"
-msgstr ""
+msgstr "必要なプラットフォームとソースgemがbundlerにより取得されることを確実にするためには、次のように加えられます。"
 
 #. type: Fenced code block
 #: ../README.md:87
@@ -297,32 +300,37 @@ msgid ""
 "bundle lock --add-platform ruby\n"
 "bundle package --all-platforms\n"
 msgstr ""
+"bundle lock --add-platform x86_64-linux\n"
+"bundle lock --add-platform arm64-darwin\n"
+"bundle lock --add-platform x64-mingw-ucrt\n"
+"bundle lock --add-platform ruby\n"
+"bundle package --all-platforms\n"
 
 #. type: Plain text
 #: ../README.md:96
 msgid ""
 "A re-run of `bundle package` is also necessary after `bundle update`, in "
 "order to retrieve the new specific gems of all platforms."
-msgstr ""
+msgstr "`bundle package`の再実行は`bundle update`後にも必須であり、これはすべてのプラットフォームの新しい特定のgemを取得するためです。"
 
 #. type: Plain text
 #: ../README.md:98
 msgid ""
 "If the binary gems don't work for some reason, it's easy to force the usage "
 "of the source gem in the Gemfile:"
-msgstr ""
+msgstr "バイナリgemが何らかの理由で動作しないなら、Gemfileでソースgemの利用を簡単に強制できます。"
 
 #. type: Fenced code block
 #: ../README.md:99
 #, no-wrap
 msgid "gem \"pg\", force_ruby_platform: true\n"
-msgstr ""
+msgstr "gem \"pg\", force_ruby_platform: true\n"
 
 #. type: Title ###
 #: ../README.md:103
 #, no-wrap
 msgid "More"
-msgstr ""
+msgstr "その他"
 
 #. type: Plain text
 #: ../README.md:107
@@ -408,10 +416,9 @@ msgid ""
 "because String allocations are reduced and conversions in (slower) Ruby code "
 "can be omitted."
 msgstr ""
-"Pgでは任意でRubyと素のCコードにある結果の値やクエリ引数の型変換ができます。\n"
+"Pgでは任意でRubyと素のCコードにある結果の値や問い合わせ引数の型変換ができます。\n"
 "こうすることでデータベースとのデータの往来を加速させられます。\n"
-"なぜなら文字列のアロケーションが減り、（比較的遅い）Rubyのコードでの変換部分"
-"が省かれるからです。"
+"なぜなら文字列のアロケーションが減り、（比較的遅い）Rubyのコードでの変換部分が省かれるからです。"
 
 #. type: Plain text
 #: ../README.md:138
@@ -452,10 +459,9 @@ msgstr ""
 
 #. type: Title ###
 #: ../README.md:153
-#, fuzzy, no-wrap
-#| msgid "Encoders / Decoders (ext/pg_*coder.c, lib/pg/*coder.rb)"
+#, no-wrap
 msgid "Encoders / Decoders (ext/pg_\\*coder.c, lib/pg/\\*coder.rb)"
-msgstr "エンコーダーとデコーダー (ext/pg_*coder.c, lib/pg/*coder.rb)"
+msgstr "エンコーダーとデコーダー (ext/pg_\\*coder.c, lib/pg/\\*coder.rb)"
 
 #. type: Plain text
 #: ../README.md:160
@@ -466,11 +472,8 @@ msgid ""
 "their format and direction in PG::TextEncoder, PG::TextDecoder, "
 "PG::BinaryEncoder and PG::BinaryDecoder."
 msgstr ""
-"こちらはより低層で、DBMSへ転送するためにRubyのオブジェクトを変換するエンコー"
-"ディングクラスと、取得してきたデータをRubyのオブジェクトに変換し戻すデコー"
-"ディングクラスが含まれています。\n"
-"クラスはそれぞれの形式によって名前空間 PG::TextEncoder, PG::TextDecoder, "
-"PG::BinaryEncoder, そして PG::BinaryDecoder に分かれています。"
+"こちらはより低層で、DBMSへ転送するためにRubyのオブジェクトを変換するエンコーディングクラスと、取得してきたデータをRubyのオブジェクトに変換し戻すデコーディングクラスが含まれています。\n"
+"クラスはそれぞれの形式によって名前空間 PG::TextEncoder, PG::TextDecoder, PG::BinaryEncoder, PG::BinaryDecoder に分かれています。"
 
 # 以下によるとcomposite typeは複合型と訳すのが良さそうです。
 #
@@ -494,12 +497,9 @@ msgid ""
 "objects can be used to set up a PG::TypeMap or alternatively to convert "
 "single values to/from their string representation."
 msgstr ""
-"エンコーダーないしデコーダーオブジェクトにOIDデータ型や形式コード（テキストな"
-"いしバイナリ）や任意で名前を割り当てることができます。\n"
-"要素のエンコーダーないしデコーダーを割り当てることによって複合型を構築するこ"
-"ともできます。\n"
-"PG::Coder オブジェクトは PG::TypeMap をセットアップしたり、その代わりに単一の"
-"値と文字列表現とを相互に変換したりするのに使えます。"
+"エンコーダーないしデコーダーオブジェクトにOIDデータ型や形式コード（テキストないしバイナリ）や任意で名前を割り当てることができます。\n"
+"要素のエンコーダーないしデコーダーを割り当てることによって複合型を構築することもできます。\n"
+"PG::Coder オブジェクトは PG::TypeMap をセットアップしたり、その代わりに単一の値と文字列表現とを相互に変換したりするのに使えます。"
 
 #. type: Plain text
 #: ../README.md:168
@@ -658,10 +658,7 @@ msgid ""
 "Date: [TE](rdoc-ref:PG::TextEncoder::Date), [TD](rdoc-"
 "ref:PG::TextDecoder::Date), [BE](rdoc-ref:PG::BinaryEncoder::Date), [BD]"
 "(rdoc-ref:PG::BinaryDecoder::Date)"
-msgstr ""
-"日付：[TE](rdoc-ref:PG::TextEncoder::Date)、[TD](rdoc-"
-"ref:PG::TextDecoder::Date)、[BE](rdoc-ref:PG::BinaryEncoder::Date)、[BD]"
-"(rdoc-ref:PG::BinaryDecoder::Date)"
+msgstr "Date: [TE](rdoc-ref:PG::TextEncoder::Date)、[TD](rdoc-ref:PG::TextDecoder::Date)、[BE](rdoc-ref:PG::BinaryEncoder::Date)、[BD](rdoc-ref:PG::BinaryDecoder::Date)"
 
 #. type: Bullet: '* '
 #: ../README.md:188
@@ -683,19 +680,11 @@ msgstr ""
 
 #. type: Bullet: '* '
 #: ../README.md:188
-#, fuzzy
-#| msgid ""
-#| "Date: [TE](rdoc-ref:PG::TextEncoder::Date), [TD](rdoc-"
-#| "ref:PG::TextDecoder::Date), [BE](rdoc-ref:PG::BinaryEncoder::Date), [BD]"
-#| "(rdoc-ref:PG::BinaryDecoder::Date)"
 msgid ""
 "Array: [TE](rdoc-ref:PG::TextEncoder::Array), [TD](rdoc-"
 "ref:PG::TextDecoder::Array), [BE](rdoc-ref:PG::BinaryEncoder::Array), [BD]"
 "(rdoc-ref:PG::BinaryDecoder::Array)"
-msgstr ""
-"日付：[TE](rdoc-ref:PG::TextEncoder::Date)、[TD](rdoc-"
-"ref:PG::TextDecoder::Date)、[BE](rdoc-ref:PG::BinaryEncoder::Date)、[BD]"
-"(rdoc-ref:PG::BinaryDecoder::Date)"
+msgstr "Array: [TE](rdoc-ref:PG::TextEncoder::Array)、[TD](rdoc-ref:PG::TextDecoder::Array)、[BE](rdoc-ref:PG::BinaryEncoder::Array)、[BD](rdoc-ref:PG::BinaryDecoder::Array)"
 
 #. type: Bullet: '* '
 #: ../README.md:188
@@ -745,20 +734,12 @@ msgstr ""
 
 #. type: Title ###
 #: ../README.md:195
-#, fuzzy, no-wrap
-#| msgid "PG::TypeMap and derivations (ext/pg_type_map*.c, lib/pg/type_map*.rb)"
+#, no-wrap
 msgid "TypeMap and derivations (ext/pg_type_map\\*.c, lib/pg/type_map\\*.rb)"
-msgstr "PG::TypeMap とその派生 (ext/pg_type_map*.c, lib/pg/type_map*.rb)"
+msgstr "TypeMap とその派生 (ext/pg_type_map\\*.c, lib/pg/type_map\\*.rb)"
 
 #. type: Plain text
 #: ../README.md:201
-#, fuzzy
-#| msgid ""
-#| "A TypeMap defines which value will be converted by which encoder/"
-#| "decoder.  There are different type map strategies, implemented by several "
-#| "derivations of this class. They can be chosen and configured according to "
-#| "the particular needs for type casting. The default type map is "
-#| "PG::TypeMapAllStrings."
 msgid ""
 "A PG::TypeMap defines which value will be converted by which encoder/"
 "decoder.  There are different type map strategies, implemented by several "
@@ -766,12 +747,9 @@ msgid ""
 "the particular needs for type casting. The default type map is "
 "PG::TypeMapAllStrings."
 msgstr ""
-"TypeMapはエンコーダーまたはデコーダーのどちらによってどの値を変換するかを定義"
-"します。\n"
-"様々な型の対応付け戦略があるので、このクラスにはいくつかの派生が実装されてい"
-"ます。\n"
-"型変換の特有の需要に合わせてそれらの派生から選んで調整を加えることができま"
-"す。\n"
+"PG::TypeMap はどのエンコーダーないしデコーダーによってどの値が変換されるかを定義します。\n"
+"様々な型の対応付けの戦略があり、このクラスの複数の派生により実装されています。\n"
+"型変換の特有の需要に合わせてそれらから選んで構成できます。\n"
 "既定の型の対応付けは PG::TypeMapAllStrings です。"
 
 #. type: Plain text
@@ -781,8 +759,7 @@ msgid ""
 "result set. Type maps can also be used for COPY in and out data streaming.  "
 "See PG::Connection#copy_data ."
 msgstr ""
-"型の対応付けは、結果の集合それぞれに対し、接続毎ないしクエリ毎に割り当てるこ"
-"とができます。\n"
+"型の対応付けは、結果の集合それぞれに対し、接続毎ないし問い合わせ毎に割り当てることができます。\n"
 "型の対応付けはCOPYの入出力データストリーミングでも使うことができます。\n"
 "PG::Connection#copy_data を参照してください。"
 
@@ -867,7 +844,7 @@ msgstr ""
 msgid ""
 "Several type maps can be chained by setting "
 "PG::TypeMap::DefaultTypeMappable#default_type_map ."
-msgstr ""
+msgstr "PG::TypeMap::DefaultTypeMappable#default_type_map を設定することで複数の型の対応付けを連鎖させられます。"
 
 #. type: Title ##
 #: ../README.md:222
@@ -877,14 +854,6 @@ msgstr "スレッド対応"
 
 #. type: Plain text
 #: ../README.md:227
-#, fuzzy
-#| msgid ""
-#| "PG is thread safe in such a way that different threads can use different "
-#| "PG::Connection objects concurrently.  However it is not safe to access "
-#| "any Pg objects simultaneously from more than one thread.  So make sure to "
-#| "open a new database server connection for every new thread or use a "
-#| "wrapper library like ActiveRecord that manages connections in a thread "
-#| "safe way."
 msgid ""
 "PG is thread safe in such a way that different threads or fibers can use "
 "different PG::Connection objects concurrently.  However it is not safe to "
@@ -893,13 +862,9 @@ msgid ""
 "connection for every new thread or use a wrapper library like ActiveRecord "
 "that manages connections in a thread safe way."
 msgstr ""
-"PGには個々のスレッドが別々の PG::Connection オブジェクトを同時に使えるという"
-"点でスレッド安全性があります。\n"
-"しかし1つ以上のスレッドから同時にPgのオブジェクトにアクセスすると安全ではあり"
-"ません。\n"
-"そのため必ず、毎回新しいスレッドを作るときに新しいデータベースサーバー接続を"
-"開くか、スレッド安全性のある方法で接続を管理するActiveRecordのようなラッパー"
-"ライブラリを使うようにしてください。"
+"PG には個々のスレッドないしファイバが個々の PG::Connection オブジェクトを並行に使えるという点でスレッド安全です。\n"
+"しかしながら1つ以上のスレッドないしファイバから同時に何らかの PG のオブジェクトにアクセスするのは安全ではありません。\n"
+"そのため必ず、新しいスレッドないしファイバの一つ一つに対して新しいデータベースサーバー接続を開くか、スレッド安全な方法で接続を管理するActiveRecordのようなラッパーライブラリを使ってください。"
 
 #. type: Plain text
 #: ../README.md:229
@@ -954,15 +919,6 @@ msgstr ""
 
 #. type: Plain text
 #: ../README.md:248
-#, fuzzy
-#| msgid ""
-#| "Internally Pg always uses the nonblocking connection mode of libpq.  It "
-#| "then behaves like running in blocking mode but ensures, that all blocking "
-#| "IO is handled in Ruby through a possibly registered `Fiber.scheduler`.  "
-#| "When `PG::Connection.setnonblocking(true)` is called then the nonblocking "
-#| "state stays enabled, but the additional handling of blocking states is "
-#| "disabled, so that the calling program has to handle blocking states on "
-#| "its own."
 msgid ""
 "Internally Pg always uses the nonblocking connection mode of libpq.  It then "
 "behaves like running in blocking mode but ensures, that all blocking IO is "
@@ -971,13 +927,9 @@ msgid ""
 "stays enabled, but the additional handling of blocking states is disabled, "
 "so that the calling program has to handle blocking states on its own."
 msgstr ""
-"内部的にPgは常にlibpqのノンブロッキング接続モードを使います。\n"
-"それからブロッキングモードで走っているように振舞いますが、もし"
-"`Fiber.scheduler`が登録されていれば全てのブロッキングIOはそのスケジューラーを"
-"通じてRubyで制御されます。\n"
-"`PG::Connection.setnonblocking(true)`が呼ばれたらノンブロッキング状態が有効に"
-"なったままになりますが、それ以降のブロッキング状態の制御が無効になるので、呼"
-"び出しているプログラムはブロッキング状態を自力で制御しなければなりません。"
+"内部的に Pg は常にlibpqのノンブロッキング接続モードを使います。\n"
+"それからブロッキングモードで走っているように振舞いますが、すべてのブロッキングIOが、可能であれば登録された`Fiber.schedular`を通じて、確実にRubyで制御されます。\n"
+"`PG::Connection.setnonblocking(true)`が呼ばれたらノンブロッキング状態が有効になったままになりますが、それ以降のブロッキング状態の制御が無効になるので、呼び出しているプログラムはブロッキング状態を自力で制御しなければなりません。"
 
 #. type: Plain text
 #: ../README.md:252
