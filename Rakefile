@@ -173,10 +173,12 @@ end
 
 desc "Translate readme"
 task :translate do
-  cd "translation" do
-    # po4a's lexer might change, so record its version for reference
-    sh "LANG=C po4a --version > .po4a-version"
+	cd "translation" do
+		# po4a's lexer might change, so record its version for reference
+		sh "LANG=C po4a --version > .po4a-version"
 
-    sh "po4a po4a.cfg"
-  end
+		pot = 'po/en.pot'
+		File.file?(pot) or FileUtils.touch(pot)
+		sh "po4a po4a.cfg"
+	end
 end
