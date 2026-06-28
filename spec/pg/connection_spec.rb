@@ -3013,6 +3013,101 @@ describe PG::Connection do
 		end
 	end
 
+	describe :compile do
+		describe "default type map" do
+			it "compiles prepared sql into plain sql" do
+				compiled = @conn.compile(<<~SQL, [1, "2", true, false, nil])
+					-- this is one: $1
+					/* this is another one: $1 */
+					select $1::int as a, $2 as b, $3 as c, $4 as d, $5 as e, '$5' as f, $$ $6 $$ as g, -- this is two: $2
+							$body$ $1 $body$ as h, t."$1", t."$2"
+					from (select 10 as "$1", 20 as "$2") as t
+				SQL
+				
+				aggregate_failures do
+					expect(compiled).to include("-- this is one: $1")
+					expect(compiled).to include("/* this is another one: $1 */")
+					expect(compiled).to include("-- this is two: $2")
+					expect(@conn.exec(compiled).first).to(
+						eq(
+							"a" => "1",
+							"b" => "2",
+							"c" => "t",
+							"d" => "f",
+							"e" => nil,
+							"f" => "$5",
+							"g" => " $6 ",
+							"h" => " $1 ",
+							"$1" => "10",
+							"$2" => "20",
+						), compiled
+					)
+				end
+			end
+			
+			it "escapes strings properly" do
+				compiled = @conn.compile(<<~SQL, ["', '1"])
+					select $1 as one
+				SQL
+
+				expect(@conn.exec(compiled).first).to(eq("one" => "', '1"))
+			end
+		end
+		
+		describe "PG::TypeMapByClass type map" do
+			before do
+				@conn2 = PG.connect(@conninfo)
+				@conn2.type_map_for_queries = PG::BasicTypeMapForQueries.new(@conn2)
+				@conn2.type_map_for_results = PG::BasicTypeMapForResults.new(@conn2)
+			end
+
+			after do
+				@conn2.close
+			end
+
+			it "compiles prepared sql into plain sql" do
+				compiled = @conn2.compile(<<~SQL, [1, "2", { foo: :bar }, [1], true, false, nil])
+					-- this is one: $1
+					/* this is another one: $1 */
+					select $1::int as a, $2 as b, $3::json as c, $4::int[] as d, '$5' as e, $$ $6 $$ as f,
+						$body$ $1 $body$ as g, -- this is two: $2
+						t."$1", t."$2", $5 as h, $6 as i, $7 j
+					from (select 10 as "$1", 20 as "$2") as t
+				SQL
+
+				aggregate_failures do
+					expect(compiled).to include("-- this is one: $1")
+					expect(compiled).to include("/* this is another one: $1 */")
+					expect(compiled).to include("-- this is two: $2")
+					expect(@conn2.exec(compiled).first).to(
+						eq(
+							"a" => 1,
+							"b" => "2",
+							"c" => { "foo" => "bar" },
+							"d" => [1],
+							"e" => "$5",
+							"f" => " $6 ",
+							"g" => " $1 ",
+							"$1" => 10,
+							"$2" => 20,
+							"h" => true,
+							"i" => false,
+							"j" => nil
+						)
+					)
+				end
+			end
+
+			it "escapes strings properly" do
+				compiled = @conn2.compile(<<~SQL, ["', '1"])
+					select $1 as one
+				SQL
+
+				expect(@conn2.exec(compiled).first).to(eq("one" => "', '1"))
+			end
+		end
+	end
+
 	describe "deprecated forms of methods" do
 		if PG::VERSION < "2"
 			it "should forward exec to exec_params" do

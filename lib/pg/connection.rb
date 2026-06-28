@@ -669,6 +669,68 @@ class PG::Connection
 	end
 	alias async_cancel cancel
 
+	PLACEHOLDER_RE = /
+		'(?:''|[^'])*'                                             | # string literal
+		"(?:""|[^"])*"                                             | # quoted identifier
+		--[^\n]*                                                   | # line comment
+		\/\*.*?\*\/                                                | # block comment
+		\$\$.*?\$\$                                                | # dollar-quoted string. E.g. $$ $1 $$
+		\$(?<__dq_tag>[A-Za-z_][A-Za-z_0-9]*)\$.*?\$\k<__dq_tag>\$ | # named dollar-quoted string. E.g. $foo$ $1 $foo$
+		(?<placeholder>\$(?:[1-9]\d*))                               # placeholder we are interested in
+	/mx
+	private_constant :PLACEHOLDER_RE
+
+	# call-seq:
+	#    conn.compile( sql, params ) -> String
+	#
+	# Compiles your prepared sql statement and the given positional arguments into plain sql.
+	# Example:
+	# 	res = conn.exec_params('SELECT $1 AS a, $2 AS b, $3 AS c', [1, 2, nil])
+	# 	# => "SELECT '1' AS a, '2' AS b, NULL AS c"
+	def compile(sql, params)
+		return sql if params.empty?
+
+		sql.gsub(PLACEHOLDER_RE).each do |matched|
+			placeholder = Regexp.last_match[:placeholder]
+			# Do not replace non-positional args string and pass it as is
+			next matched unless placeholder
+
+			value = params[placeholder[1..].to_i - 1]
+			value = encode_value(value)
+			normalize_value(value)
+		end
+	end
+
+	private def encode_value(value)
+		return value if type_map_for_queries.is_a?(PG::TypeMapAllStrings)
+		unless type_map_for_queries.is_a?(PG::TypeMapByClass)
+			raise <<~TEXT.strip
+				Unsupported type map. Please use the one which is inherited from PG::TypeMapByClass, for example \
+				PG::BasicTypeMapForQueries:
+				conn = PG::Connection.new
+				conn.type_map_for_queries = PG::BasicTypeMapForQueries.new(conn)
+			TEXT
+		end
+
+		encoder = type_map_for_queries[value.class]
+		return type_map_for_queries.send(encoder, value).encode(value) if encoder.is_a?(Symbol)
+		# format == 1 stands for binary format
+		return value if encoder.nil? || encoder.format == 1
+
+		encoder.encode(value)
+	end
+
+	private def normalize_value(value)
+		case value
+		when TrueClass, FalseClass
+			"#{value}"
+		when NilClass
+			'NULL'
+		else
+			"'#{self.class.escape(value.to_s)}'"
+		end
+	end
+
 	module Pollable
 		# Track the progress of the connection, waiting for the socket to become readable/writable before polling it.
 		#
