@@ -115,6 +115,36 @@ pg_typemap_s_allocate( VALUE klass )
 	return self;
 }
 
+
+static VALUE
+pg_typemap_query_param_encoders( VALUE self, VALUE params )
+{
+	t_typemap *this = RTYPEDDATA_DATA( self );
+	int nParams;
+	int i=0;
+	VALUE res;
+
+	Check_Type(params, T_ARRAY);
+
+	this->funcs.fit_to_query( self, params );
+
+	nParams = RARRAY_LENINT(params);
+	res = rb_ary_new();
+
+	for ( i = 0; i < nParams; i++ ) {
+		t_pg_coder *conv;
+		VALUE param_value = rb_ary_entry(params, i);
+
+		/* Let the given typemap select a coder for this param */
+		conv = this->funcs.typecast_query_param(this, param_value, i);
+		if(conv)
+			rb_ary_push(res, conv->coder_obj);
+		else
+			rb_ary_push(res, Qnil);
+	}
+	return res;
+}
+
 /*
  * call-seq:
  *    res.default_type_map = typemap
@@ -194,6 +224,7 @@ init_pg_type_map(void)
 	 */
 	rb_cTypeMap = rb_define_class_under( rb_mPG, "TypeMap", rb_cObject );
 	rb_define_alloc_func( rb_cTypeMap, pg_typemap_s_allocate );
+	rb_define_method( rb_cTypeMap, "query_param_encoders", pg_typemap_query_param_encoders, 1 );
 
 	rb_mDefaultTypeMappable = rb_define_module_under( rb_cTypeMap, "DefaultTypeMappable");
 	rb_define_method( rb_mDefaultTypeMappable, "default_type_map=", pg_typemap_default_type_map_set, 1 );

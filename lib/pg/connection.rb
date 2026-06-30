@@ -690,44 +690,31 @@ class PG::Connection
 	def compile(sql, params)
 		return sql if params.empty?
 
+		encoders = type_map_for_queries.query_param_encoders(params)
+		params = encoders.map.with_index do |enc, i|
+			value = params[i]
+			case value
+			when TrueClass, FalseClass
+				"#{value}"
+			when NilClass
+				'NULL'
+			when PG::BasicTypeMapForQueries::BinaryData
+				value = "'#{ PG::TextEncoder::Bytea.new.encode(value) }'"
+			else
+				if enc
+					raise ArgumentError, "binary encoded data from #{enc} cannot be inserted into SQL text" if enc.format != 0
+					value = enc.encode(value)
+				end
+				"'#{escape(value.to_s)}'"
+			end
+		end
+
 		sql.gsub(PLACEHOLDER_RE).each do |matched|
 			placeholder = Regexp.last_match[:placeholder]
 			# Do not replace non-positional args string and pass it as is
 			next matched unless placeholder
 
-			value = params[placeholder[1..].to_i - 1]
-			value = encode_value(value)
-			normalize_value(value)
-		end
-	end
-
-	private def encode_value(value)
-		return value if type_map_for_queries.is_a?(PG::TypeMapAllStrings)
-		unless type_map_for_queries.is_a?(PG::TypeMapByClass)
-			raise <<~TEXT.strip
-				Unsupported type map. Please use the one which is inherited from PG::TypeMapByClass, for example \
-				PG::BasicTypeMapForQueries:
-				conn = PG::Connection.new
-				conn.type_map_for_queries = PG::BasicTypeMapForQueries.new(conn)
-			TEXT
-		end
-
-		encoder = type_map_for_queries[value.class]
-		return type_map_for_queries.send(encoder, value).encode(value) if encoder.is_a?(Symbol)
-		# format == 1 stands for binary format
-		return value if encoder.nil? || encoder.format == 1
-
-		encoder.encode(value)
-	end
-
-	private def normalize_value(value)
-		case value
-		when TrueClass, FalseClass
-			"#{value}"
-		when NilClass
-			'NULL'
-		else
-			"'#{self.class.escape(value.to_s)}'"
+			params[placeholder[1..].to_i - 1]
 		end
 	end
 

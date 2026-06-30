@@ -3105,6 +3105,16 @@ describe PG::Connection do
 
 				expect(@conn2.exec(compiled).first).to(eq("one" => "', '1"))
 			end
+
+			it "encodes binary strings properly" do
+				binary = PG::BasicTypeMapForQueries::BinaryData.new("\0\xff\r\n\t'".b)
+				compiled = @conn2.compile(<<~SQL, [binary])
+					select $1::bytea as one
+				SQL
+
+				res = @conn2.exec(compiled).first
+				expect(res["one"]).to(eq(binary))
+			end
 		end
 	end
 
