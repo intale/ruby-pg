@@ -3024,6 +3024,15 @@ describe PG::Connection do
 			compiled
 		end
 
+		def with_std_conf_strings(conn, onoff)
+			conn.exec("SET standard_conforming_strings = #{onoff}")
+			conn.exec("SET escape_string_warning = #{onoff}")
+			yield
+		ensure
+			conn.exec("SET standard_conforming_strings = on")
+			conn.exec("SET escape_string_warning = on")
+		end
+
 		describe "default type map" do
 			it "compiles prepared sql into plain sql" do
 				compiled = embed_params_and_check(<<~SQL, [1, "2", true, false, nil])
@@ -3048,21 +3057,26 @@ describe PG::Connection do
 			end
 
 			context "with params as Hash" do
-				it "encodes values properly" do
-					params = [
-						{value: "\0\xff\r\n\t2'".b, format: 1},
-						{value: "\0\xff\r\n\t1'".b, format: 1, type: 17},
-						{value: "abc"},
-						{value: 4},
-						{value: 5, type: 23},
-						{value: "{ 6, 7}", type: 1007},
-						{value: false},
-						{value: "\\x000102ff", type: 17},
-						{value: nil}
-					]
-					embed_params_and_check <<~SQL, params
-						select $1::bytea as a, $2 as b, $3 as c, $4 as d, $5 as e, $6 as f, $7 as g, $8 as h, $9 as i
-					SQL
+
+				['on', 'off'].each do |stdconf|
+					it "encodes values properly with std conforming strings=#{stdconf}" do
+						with_std_conf_strings(@conn, stdconf) do
+							params = [
+								{value: "'\x1F\\".b, format: 1},
+								{value: "'\0\xff\r\n\t1'".b, format: 1, type: 17},
+								{value: "abc"},
+								{value: 4},
+								{value: 5, type: 23},
+								{value: "{ 6, 7}", type: 1007},
+								{value: false},
+								{value: "\\x000102ff", type: 17},
+								{value: nil}
+							]
+							embed_params_and_check <<~SQL, params
+								select $1::bytea as a, $2 as b, $3 as c, $4 as d, $5 as e, $6 as f, $7 as g, $8 as h, $9 as i
+							SQL
+						end
+					end
 				end
 			end
 		end
@@ -3101,11 +3115,15 @@ describe PG::Connection do
 				SQL
 			end
 
-			it "encodes binary strings properly" do
-				binary = PG::BasicTypeMapForQueries::BinaryData.new("\0\xff\r\n\t'".b)
-				embed_params_and_check(<<~SQL, [binary], conn: @conn2)
-					select $1::bytea as one
-				SQL
+			['on', 'off'].each do |stdconf|
+				it "encodes binary strings properly with std conforming strings=#{stdconf}" do
+					with_std_conf_strings(@conn, stdconf) do
+						binary = PG::BasicTypeMapForQueries::BinaryData.new("''\0\xff\r\n\t'".b)
+						embed_params_and_check(<<~SQL, [binary], conn: @conn2)
+							select $1::bytea as one
+						SQL
+					end
+				end
 			end
 		end
 	end

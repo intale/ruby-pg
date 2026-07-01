@@ -720,7 +720,7 @@ class PG::Connection
 			when NilClass
 				'NULL'
 			when PG::BasicTypeMapForQueries::BinaryData
-				"'#{ PG::TextEncoder::Bytea.new.encode(value) }'"
+				"'#{ escape_bytea(value) }'"
 			else
 				if enc
 					raise ArgumentError, "binary encoded data from #{enc} cannot be inserted into SQL text" if enc.format != 0
@@ -732,7 +732,7 @@ class PG::Connection
 						else
 							if value[:format] == 1
 								raise ArgumentError, "binary encoded data with OID #{value[:type]} cannot be inserted into SQL text" if value[:type] && value[:type] != 17
-								"'#{ PG::TextEncoder::Bytea.new.encode(value[:value].to_s) }'#{oid_to_typecast[value[:type]]}"
+								"'#{ escape_bytea(value[:value].to_s) }'#{oid_to_typecast[value[:type]]}"
 							else
 								"'#{escape(value[:value].to_s)}'#{oid_to_typecast[value[:type]]}"
 							end
