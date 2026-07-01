@@ -115,7 +115,19 @@ pg_typemap_s_allocate( VALUE klass )
 	return self;
 }
 
-
+/*
+ * call-seq:
+ *    res.query_param_encoders(params)
+ *
+ * Retrieve the encoders that are used to encode the given values to be submitted to the database server.
+ * The selection of the encoders is defined in the derived type map class.
+ *
+ * +params+ must be an Array of values to be encoded.
+ * It's like +params+ given to exec_params .
+ *
+ * Returns an Array with the same length as +params+.
+ *
+ */
 static VALUE
 pg_typemap_query_param_encoders( VALUE self, VALUE params )
 {
@@ -129,7 +141,7 @@ pg_typemap_query_param_encoders( VALUE self, VALUE params )
 	this->funcs.fit_to_query( self, params );
 
 	nParams = RARRAY_LENINT(params);
-	res = rb_ary_new();
+	res = rb_ary_new2(nParams);
 
 	for ( i = 0; i < nParams; i++ ) {
 		t_pg_coder *conv;
@@ -137,10 +149,7 @@ pg_typemap_query_param_encoders( VALUE self, VALUE params )
 
 		/* Let the given typemap select a coder for this param */
 		conv = this->funcs.typecast_query_param(this, param_value, i);
-		if(conv)
-			rb_ary_push(res, conv->coder_obj);
-		else
-			rb_ary_push(res, Qnil);
+		rb_ary_push(res, conv ? conv->coder_obj : Qnil);
 	}
 	return res;
 }
