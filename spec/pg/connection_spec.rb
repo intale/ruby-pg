@@ -3013,10 +3013,20 @@ describe PG::Connection do
 		end
 	end
 
-	describe :compile do
+	describe :embed_params do
+
+		def embed_params_and_check(sql, params, conn: @conn)
+			compiled = conn.embed_params(sql, params)
+
+			res = conn.exec(compiled)
+			res2 = conn.exec_params(sql, params)
+			expect( res.to_a ).to eq( res2.to_a ), compiled
+			compiled
+		end
+
 		describe "default type map" do
 			it "compiles prepared sql into plain sql" do
-				compiled = @conn.compile(<<~SQL, [1, "2", true, false, nil])
+				compiled = embed_params_and_check(<<~SQL, [1, "2", true, false, nil])
 					-- this is one: $1
 					/* this is another one: $1 */
 					select $1::int as a, $2 as b, $3 as c, $4 as d, $5 as e, '$5' as f, $$ $6 $$ as g, -- this is two: $2
@@ -3028,29 +3038,32 @@ describe PG::Connection do
 					expect(compiled).to include("-- this is one: $1")
 					expect(compiled).to include("/* this is another one: $1 */")
 					expect(compiled).to include("-- this is two: $2")
-					expect(@conn.exec(compiled).first).to(
-						eq(
-							"a" => "1",
-							"b" => "2",
-							"c" => "t",
-							"d" => "f",
-							"e" => nil,
-							"f" => "$5",
-							"g" => " $6 ",
-							"h" => " $1 ",
-							"$1" => "10",
-							"$2" => "20",
-						), compiled
-					)
 				end
 			end
 			
 			it "escapes strings properly" do
-				compiled = @conn.compile(<<~SQL, ["', '1"])
+				embed_params_and_check(<<~SQL, ["', '1"])
 					select $1 as one
 				SQL
+			end
 
-				expect(@conn.exec(compiled).first).to(eq("one" => "', '1"))
+			context "with params as Hash" do
+				it "encodes values properly" do
+					params = [
+						{value: "\0\xff\r\n\t2'".b, format: 1},
+						{value: "\0\xff\r\n\t1'".b, format: 1, type: 17},
+						{value: "abc"},
+						{value: 4},
+						{value: 5, type: 23},
+						{value: "{ 6, 7}", type: 1007},
+						{value: false},
+						{value: "\\x000102ff", type: 17},
+						{value: nil}
+					]
+					embed_params_and_check <<~SQL, params
+						select $1::bytea as a, $2 as b, $3 as c, $4 as d, $5 as e, $6 as f, $7 as g, $8 as h, $9 as i
+					SQL
+				end
 			end
 		end
 		
@@ -3066,7 +3079,7 @@ describe PG::Connection do
 			end
 
 			it "compiles prepared sql into plain sql" do
-				compiled = @conn2.compile(<<~SQL, [1, "2", { foo: :bar }, [1], true, false, nil])
+				compiled = embed_params_and_check(<<~SQL, [1, "2", { foo: :bar }, [1], true, false, nil], conn: @conn2)
 					-- this is one: $1
 					/* this is another one: $1 */
 					select $1::int as a, $2 as b, $3::json as c, $4::int[] as d, '$5' as e, $$ $6 $$ as f,
@@ -3079,41 +3092,20 @@ describe PG::Connection do
 					expect(compiled).to include("-- this is one: $1")
 					expect(compiled).to include("/* this is another one: $1 */")
 					expect(compiled).to include("-- this is two: $2")
-					expect(@conn2.exec(compiled).first).to(
-						eq(
-							"a" => 1,
-							"b" => "2",
-							"c" => { "foo" => "bar" },
-							"d" => [1],
-							"e" => "$5",
-							"f" => " $6 ",
-							"g" => " $1 ",
-							"$1" => 10,
-							"$2" => 20,
-							"h" => true,
-							"i" => false,
-							"j" => nil
-						)
-					)
 				end
 			end
 
 			it "escapes strings properly" do
-				compiled = @conn2.compile(<<~SQL, ["', '1"])
+				embed_params_and_check(<<~SQL, ["', '1"], conn: @conn2)
 					select $1 as one
 				SQL
-
-				expect(@conn2.exec(compiled).first).to(eq("one" => "', '1"))
 			end
 
 			it "encodes binary strings properly" do
 				binary = PG::BasicTypeMapForQueries::BinaryData.new("\0\xff\r\n\t'".b)
-				compiled = @conn2.compile(<<~SQL, [binary])
+				embed_params_and_check(<<~SQL, [binary], conn: @conn2)
 					select $1::bytea as one
 				SQL
-
-				res = @conn2.exec(compiled).first
-				expect(res["one"]).to(eq(binary))
 			end
 		end
 	end

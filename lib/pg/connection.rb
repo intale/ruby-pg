@@ -680,32 +680,66 @@ class PG::Connection
 	/mx
 	private_constant :PLACEHOLDER_RE
 
-	# call-seq:
-	#    conn.compile( sql, params ) -> String
+	# Compiles your prepared SQL statement and the given positional arguments into plain SQL string.
 	#
-	# Compiles your prepared sql statement and the given positional arguments into plain sql.
+	# The resulting SQL string can be used with +conn.exec+ like the prepared SQL statement and parameters with +conn.exec_params+.
+	# +conn.exec_params+ is usually preferred because it's faster and safer.
+	# +embed_params+ is intended for debugging messages with positional parameters.
+	# It avoids manual insertion for later inspection in +psql+ or so.
+	#
 	# Example:
-	# 	res = conn.exec_params('SELECT $1 AS a, $2 AS b, $3 AS c', [1, 2, nil])
+	# 	res = conn.embed_params('SELECT $1 AS a, $2 AS b, $3 AS c', [1, 2, nil])
 	# 	# => "SELECT '1' AS a, '2' AS b, NULL AS c"
-	def compile(sql, params)
+	def embed_params(sql, params, type_map: type_map_for_queries, coder_maps_bundle: nil)
 		return sql if params.empty?
 
-		encoders = type_map_for_queries.query_param_encoders(params)
+		oid_to_typecast = proc do |oid|
+			if oid && oid > 0
+				by_oid = if coder_maps_bundle
+					# Try to retrieve types from the method argument
+					coder_maps_bundle.typenames_by_oid
+				elsif type_map.respond_to?(:coder_maps_bundle)
+					# Try to retrieve types from the current type map
+					type_map.coder_maps_bundle.typenames_by_oid
+				elsif @typenames_by_oid
+					# Try to use cached types
+					@typenames_by_oid
+				else
+					# Load and cache types from the database server
+					@typenames_by_oid = PG::BasicTypeRegistry::CoderMapsBundle.new(self).typenames_by_oid
+				end
+				typename = by_oid[oid] || raise(ArgumentError, "cannot determine database type name of OID #{oid}")
+				"::#{ typename }"
+			end
+		end
+
+		encoders = type_map.query_param_encoders(params)
 		params = encoders.map.with_index do |enc, i|
 			value = params[i]
 			case value
-			when TrueClass, FalseClass
-				"#{value}"
 			when NilClass
 				'NULL'
 			when PG::BasicTypeMapForQueries::BinaryData
-				value = "'#{ PG::TextEncoder::Bytea.new.encode(value) }'"
+				"'#{ PG::TextEncoder::Bytea.new.encode(value) }'"
 			else
 				if enc
 					raise ArgumentError, "binary encoded data from #{enc} cannot be inserted into SQL text" if enc.format != 0
-					value = enc.encode(value)
+					"'#{escape(enc.encode(value))}'#{oid_to_typecast[enc.oid]}"
+				elsif Hash === value
+					next case value[:value]
+						when NilClass
+							'NULL'
+						else
+							if value[:format] == 1
+								raise ArgumentError, "binary encoded data with OID #{value[:type]} cannot be inserted into SQL text" if value[:type] && value[:type] != 17
+								"'#{ PG::TextEncoder::Bytea.new.encode(value[:value].to_s) }'#{oid_to_typecast[value[:type]]}"
+							else
+								"'#{escape(value[:value].to_s)}'#{oid_to_typecast[value[:type]]}"
+							end
+						end
+				else
+					"'#{escape(value.to_s)}'"
 				end
-				"'#{escape(value.to_s)}'"
 			end
 		end
 
