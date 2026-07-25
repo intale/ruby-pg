@@ -3017,9 +3017,10 @@ describe PG::Connection do
 
 		def embed_params_and_check(sql, params, conn: @conn)
 			compiled = conn.embed_params(sql, params)
-
+			puts compiled
 			res = conn.exec(compiled)
 			res2 = conn.exec_params(sql, params)
+			puts res.to_a
 			expect( res.to_a ).to eq( res2.to_a ), compiled
 			expect( result_typenames(res) ).to eq( result_typenames(res2) ), compiled
 			compiled
@@ -3049,6 +3050,14 @@ describe PG::Connection do
 					expect(compiled).to include("/* this is another one: $1 */")
 					expect(compiled).to include("-- this is two: $2")
 				end
+			end
+
+			it "complies double perscent literal properly" do
+				compiled = embed_params_and_check(<<~SQL, ["%%, 1 as injection, %%"])
+					select %% $1 %% as one, $1 as two
+				SQL
+				
+				expect(compiled.strip).to eq("select %% $1 %% as one, '%%, 1 as injection, %%' as two")
 			end
 
 			it "escapes strings properly" do

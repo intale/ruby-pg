@@ -675,6 +675,7 @@ class PG::Connection
 		--[^\n]*                                                   | # line comment
 		\/\*.*?\*\/                                                | # block comment
 		\$\$.*?\$\$                                                | # dollar-quoted string. E.g. $$ $1 $$
+		# %%.*?%%                                                    | # percent-quoted string. E.g. %% $1 %%
 		\$(?<__dq_tag>[A-Za-z_][A-Za-z_0-9]*)\$.*?\$\k<__dq_tag>\$ | # named dollar-quoted string. E.g. $foo$ $1 $foo$
 		(?<placeholder>\$(?:[1-9]\d*))                               # placeholder we are interested in
 	/mx
